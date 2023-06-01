@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "proofs"
+  site-url: "https://maxtheman.github.io/proofs"
+  description: "Mathematical proof assistant for students and amateurs."
+  repo-branch: main
+  repo-url: "https://github.com/maxtheman/proofs"
