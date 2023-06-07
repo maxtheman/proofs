@@ -85,7 +85,7 @@ contradiction_goal = not_equals(expression, arbitrary_x)
 ``` python
 @contradiction_proof
 def proof_of_x_plus_one(x):
-    # Given x, Assume x + 1 = x is true for arbitrary_x
+    # Given x, Assume x + 1 = x is true for arbitrary x
     assumed_eq = equals(x + 1, x)
 
     # Calculate x + 1
@@ -98,7 +98,7 @@ def proof_of_x_plus_one(x):
 prove(contradiction_goal, proof_of_x_plus_one, arbitrary_x)
 ```
 
-$$\mathtt{\text{Given x, Assume x + 1 = x is true for arbitrary\_x}}$$
+$$\mathtt{\text{Given x, Assume x + 1 = x is true for arbitrary x}}$$
 
 $$x + 1 = x$$
 
