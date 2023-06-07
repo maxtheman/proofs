@@ -72,7 +72,7 @@ print(expression)
 make_examples('real', 3, expression)
 ```
 
-    [(-92, -91), (59, 60), (80, 81)]
+    [(46, 47), (-98, -97), (85, 86)]
 
 Hopefully these examples convice us that the statement is false. This
 suggests that we can prove it by contradiction.

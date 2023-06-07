@@ -2,7 +2,7 @@
 
 # %% auto 0
 __all__ = ['Var', 'Const', 'Func', 'Goal', 'Expression', 'variable', 'constant', 'equation', 'equals', 'not_equals',
-           'make_examples', 'prove', 'contradiction_proof']
+           'make_examples', 'prove', 'print_proof', 'contradiction_proof', 'direct_proof']
 
 # %% ../nbs/00_core.ipynb 3
 from typing import Callable, List, Tuple, Union
@@ -12,12 +12,12 @@ from sympy.core.basic import Basic
 from random import randint, seed
 import sympy as sp
 
-from IPython.display import display, Latex
+from IPython.display import display, Latex, HTML
 
 import typing
 import inspect
 
-# %% ../nbs/00_core.ipynb 4
+# %% ../nbs/00_core.ipynb 5
 # Basic types
 Var = sp.Symbol
 Const = sp.Number
@@ -43,8 +43,11 @@ def equals(lhs: sp.Expr, rhs: sp.Expr) -> Equality:
 def not_equals(lhs: Expression, rhs: Expression) -> Unequality:
     return sp.Ne(lhs, rhs, evaluate=False)
 
-# %% ../nbs/00_core.ipynb 5
-def make_examples(domain: str, N: int, equation: str) -> List[Tuple[sp.Expr, sp.Expr]]:
+# %% ../nbs/00_core.ipynb 7
+def make_examples(domain: str, #Domain of the example equation
+                  N: int, #Number of examples
+                  equation: str #Equation to generate examples for
+                  ) -> List[Tuple[sp.Expr, sp.Expr]]: #List of input-output pairs
     """For a given domain and equation, select N examples and generate a list of N input-output pairs.
     Currently, the domain can be either 'real' or 'integer', and one variable is assumed."""
     examples = []
@@ -62,22 +65,76 @@ def make_examples(domain: str, N: int, equation: str) -> List[Tuple[sp.Expr, sp.
             x_val = randint(-100, 100)
             y_val = sp.sympify(equation).subs(x, x_val)
             examples.append((x_val, y_val))
+    else:
+        raise ValueError(f"Domain {domain} not supported.")
     return examples
 
-# %% ../nbs/00_core.ipynb 7
-def prove(goal: Goal, proof_func: Callable[..., Goal], *args) -> bool:
+# %% ../nbs/00_core.ipynb 12
+def prove(goal: Goal, #Goal to prove
+          proof_func: Callable[..., Goal], #Proof function
+          *args #Arguments to proof function
+          ) -> bool: #True if proof succeeds, False otherwise
+    """Prove a goal using a proof function and arguments.
+    The proof function should take the goal as the last argument and return the derived result.
+    The goal is proved if the derived result matches the goal."""
     try:
-        derived_goal = proof_func(*args)
-        if goal == derived_goal:
+        derived_result = proof_func(*args)
+        if goal == derived_result:
             display(Latex(f"$$\\text \\quad {sp.latex(goal)} \\quad Q.E.D.$$"))
             return True
+        else:
+            raise Exception(f"Derived result {derived_result} does not match goal {goal}")
     except Exception as e:
-        print(f"Proof error: {str(e)}")
+        print(f"Proof failed: {str(e)}")
         print("Check your assumptions and proof function for errors.")
         return False
 
-# %% ../nbs/00_core.ipynb 8
-def contradiction_proof(proof):
+# %% ../nbs/00_core.ipynb 16
+def print_proof(proof: Callable[..., Goal], # the proof function
+                 *args # the arguments to the proof function
+                 ) -> None: # no return value
+    """Print a proof step by step. Mostly used when defining a proof evaluation function.
+    The proof function should take the goal as the last argument and return the derived result.
+    The goal is proved if the derived result matches the goal.
+    Comments do not support latex formatting, but the rest of the proof does."""
+    # add all of the arguments to the local namespace with their existing names that are passed in.
+    args_list = lambda args: [_arg for _arg in args]
+    _printed = ['_formatted_comment','_i', '_arg', 'line', 'var_name','args_list', '_printed', 'var_value', 'proof', 'args', 'kwargs', 'hints']
+    #build latex string progressively and render at the end
+    for _i, _arg in enumerate(args_list(args)):
+        exec(f"{_arg} = args[{_i}]", globals(), locals())
+        _printed.append(str(_arg))
+    for _i, line in enumerate(inspect.getsourcelines(proof)[0]):
+        #print each varaible only once, and add opt outs
+        line = line.strip()
+        if line.startswith('#'):
+            # Nicely formatted representation of the comment
+            _formatted_comment = line[1:].strip()
+            display(Latex(f"$${sp.latex(_formatted_comment)}$$"))
+        if line.startswith('def'):
+            continue
+        if line.startswith('@'):
+            continue
+        if line.startswith('return'):
+            line = line[7:]
+        if line == '':
+            continue
+        exec(line, globals(), locals())
+        # print(f"\nProof state after line {i+1}: {line}")
+        for var_name, var_value in locals().items():
+            if var_name in _printed:
+                continue
+            else:
+                _printed.append(var_name)
+            # if isinstance(var_value, (Var, Const, Func)):
+            display(Latex(f"$${sp.latex(var_value)}$$"))
+
+# %% ../nbs/00_core.ipynb 19
+def contradiction_proof(proof: Callable[..., Goal] # the proof function
+                        ) -> Callable[..., Unequality]: # the wrapped contradiction proof function to evaluate
+    """Wrap a proof function to prove a contradiction.
+    The proof function should take the goal as the last argument and return the derived result.
+    The goal is proved if the derived result matches the goal."""
     def wrapper(*args, **kwargs):
         hints = typing.get_type_hints(proof)
         if hints != {}:
@@ -86,37 +143,7 @@ def contradiction_proof(proof):
                 raise TypeError("Proof function must return Unequality")
         else:
             try:
-                # add all of the arguments to the local namespace with their existing names that are passed in.
-                args_list = lambda args: [_arg for _arg in args]
-                _printed = ['_i', '_arg', 'line', 'var_name','args_list', '_printed', 'var_value', 'proof', 'args', 'kwargs', 'hints']
-                for _i, _arg in enumerate(args_list(args)):
-                    exec(f"{_arg} = args[{_i}]", globals(), locals())
-                    _printed.append(str(_arg))
-                for _i, line in enumerate(inspect.getsourcelines(proof)[0]):
-                    #print each varaible only once, and add opt outs
-                    line = line.strip()
-                    if line.startswith('#'):
-                        # in future concatenate all the strings into one doc and format nicely.
-                        # first attempt didn't work out, had weird formatting issues.
-                        display(Latex(f"{line[1:].strip()}"))
-                        continue
-                    if line.startswith('def'):
-                        continue
-                    if line.startswith('@'):
-                        continue
-                    if line.startswith('return'):
-                        line = line[7:]
-                    if line == '':
-                        continue
-                    exec(line, globals(), locals())
-                    # print(f"\nProof state after line {i+1}: {line}")
-                    for var_name, var_value in locals().items():
-                        if var_name in _printed:
-                            continue
-                        else:
-                            _printed.append(var_name)
-                        # if isinstance(var_value, (Var, Const, Func)):
-                        display(Latex(f"$${sp.latex(var_value)}$$"))
+                print_proof(proof, *args, **kwargs)
             except Exception as e:
                 print(f"Error in proof function: {str(e)}")
                 raise
@@ -124,5 +151,29 @@ def contradiction_proof(proof):
             result = proof(*args, **kwargs)
             if not isinstance(result, Unequality):
                 raise TypeError("Proof function must return Unequality")
+            return result
+    return wrapper
+
+# %% ../nbs/00_core.ipynb 21
+def direct_proof(proof: Callable[..., Goal] # the proof function
+                        ) -> Callable[..., Equality]: # the wrapped proof function to evaluate
+    """Wrap a proof function to prove a direct proof.
+    The proof function should take the goal as the last argument and return the derived result.
+    The goal is proved if the derived result matches the goal."""
+    def wrapper(*args, **kwargs):
+        hints = typing.get_type_hints(proof)
+        if hints != {}:
+            if hints.get('return') != Equality:
+                print(hints.get('return'))
+                raise TypeError("Proof function must return Equality")
+        else:
+            try:
+                print_proof(proof, *args, **kwargs)
+            except Exception as e:
+                print(f"Error in proof function: {str(e)}")
+                raise
+            result = proof(*args, **kwargs)
+            if not isinstance(result, Equality):
+                raise TypeError("Proof function must return Equality")
             return result
     return wrapper

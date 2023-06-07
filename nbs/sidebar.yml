@@ -3,4 +3,5 @@ website:
     contents:
       - index.ipynb
       - 00_core.ipynb
-      - 01_assistant.ipynb
+      - 01_polynomials.ipynb
+      - 99_assistant.ipynb
