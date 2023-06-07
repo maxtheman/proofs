@@ -72,7 +72,7 @@ print(expression)
 make_examples('real', 3, expression)
 ```
 
-    [(46, 47), (-98, -97), (85, 86)]
+    [(-57, -56), (-100, -99), (-31, -30)]
 
 Hopefully these examples convice us that the statement is false. This
 suggests that we can prove it by contradiction.
@@ -91,31 +91,34 @@ def proof_of_x_plus_one(x):
     # Calculate x + 1
     next = x + 1
 
-    # Observing x + 1 $\neq$ x, we have reached a contradiction
+    # Observing x + 1 != x, we have reached a contradiction
     return not_equals(next, assumed_eq.rhs)
 
 #Select an arbitrary x from the domain
 prove(contradiction_goal, proof_of_x_plus_one, arbitrary_x)
 ```
 
-    <IPython.core.display.Latex object>
+$$\mathtt{\text{Given x, Assume x + 1 = x is true for arbitrary\_x}}$$
 
 $$x + 1 = x$$
 
-    <IPython.core.display.Latex object>
+$$\mathtt{\text{Calculate x + 1}}$$
 
 $$x + 1$$
 
-    <IPython.core.display.Latex object>
+$$\mathtt{\text{Observing x + 1 != x, we have reached a contradiction}}$$
 
 $$\text \quad x + 1 \neq x \quad Q.E.D.$$
 
     True
 
-With this, we get: 1. comments converted to latex, along with latex
-rendering of the math we are doing in python 2. validation that what we
-are returning from the proof matches the expected goal 3. some
-additional helpful errors
+With this, we get:
+
+1.  Complete latex rendering of the math we are doing in python and our
+    logic
+2.  validation that what we are returning from the proof matches the
+    expected goal
+3.  some additional helpful errors
 
 # Next steps
 
