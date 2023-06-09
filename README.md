@@ -58,21 +58,21 @@ proof.
 ``` python
 # Start by defining your domain
 arbitrary_x = variable("x")
-expression = arbitrary_x + 1
+expression = arbitrary_x + 2
 ```
 
 ``` python
 print(expression)
 ```
 
-    x + 1
+    x + 2
 
 ``` python
 # select a few examples from the reals
 make_examples('real', 3, expression)
 ```
 
-    [(-57, -56), (-100, -99), (-31, -30)]
+    [(-39, -37), (-13, -11), (7, 9)]
 
 Hopefully these examples convice us that the statement is false. This
 suggests that we can prove it by contradiction.
@@ -108,9 +108,10 @@ $$x + 1$$
 
 $$\mathtt{\text{Observing x + 1 != x, we have reached a contradiction}}$$
 
-$$\text \quad x + 1 \neq x \quad Q.E.D.$$
+    Proof failed: Derived result Ne(x + 1, x) does not match goal Ne(x + 2, x)
+    Check your assumptions and proof function for errors.
 
-    True
+    False
 
 With this, we get:
 
